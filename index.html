@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worksheet Prompt Generator — Writing Tutoring Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --blue: #2d5be3;
+    --blue-light: #e8eefb;
+    --blue-mid: #c2d0f5;
+    --gold: #e8a022;
+    --green: #1a8a5a;
+    --green-light: #e6f7f0;
+    --red: #c0392b;
+    --gray-1: #f5f6fa;
+    --gray-2: #e8eaef;
+    --gray-3: #9aa0b4;
+    --gray-4: #5a6177;
+    --text: #1a2744;
+    --white: #ffffff;
+    --radius: 12px;
+    --radius-sm: 7px;
+    --shadow: 0 2px 16px rgba(26,39,68,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--gray-1); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--navy); padding: 20px 36px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .header-icon { width: 42px; height: 42px; background: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .header-text h1 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--white); }
+  .header-text p { font-size: 12.5px; color: var(--blue-mid); margin-top: 2px; }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 400px 1fr; min-height: calc(100vh - 83px); }
+
+  /* FORM PANEL */
+  .form-panel { background: var(--white); border-right: 1px solid var(--gray-2); padding: 28px 24px; overflow-y: auto; }
+  .panel-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--navy); margin-bottom: 22px; padding-bottom: 10px; border-bottom: 2px solid var(--gray-2); display: flex; align-items: center; gap: 7px; }
+
+  .field { margin-bottom: 20px; }
+  .field-label { font-size: 11.5px; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  .badge { font-size: 10px; background: var(--blue-light); color: var(--blue); border-radius: 4px; padding: 1px 6px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .field-hint { font-size: 12px; color: var(--gray-3); margin-bottom: 6px; line-height: 1.5; }
+
+  select, textarea, input[type="text"] {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text);
+    background: var(--gray-1); border: 1.5px solid var(--gray-2); border-radius: var(--radius-sm);
+    padding: 9px 11px; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; outline: none;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239aa0b4' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; padding-right: 30px; cursor: pointer; appearance: none; }
+  select:focus, textarea:focus, input[type="text"]:focus { border-color: var(--blue); background: var(--white); box-shadow: 0 0 0 3px rgba(45,91,227,0.10); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+  .toggle-row { display: flex; gap: 7px; }
+  .toggle-btn { flex: 1; padding: 8px; border: 1.5px solid var(--gray-2); border-radius: var(--radius-sm); background: var(--gray-1); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--gray-4); cursor: pointer; transition: all 0.18s; text-align: center; }
+  .toggle-btn.active { background: var(--blue); border-color: var(--blue); color: var(--white); box-shadow: 0 2px 8px rgba(45,91,227,0.25); }
+  .toggle-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+  .chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 6px 12px; border: 1.5px solid var(--gray-2); border-radius: 20px; font-size: 12.5px; font-weight: 500; color: var(--gray-4); background: var(--gray-1); cursor: pointer; transition: all 0.18s; user-select: none; }
+  .chip.selected { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .chip:hover:not(.selected) { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .chip-note { font-size: 11px; color: var(--gray-3); margin-top: 5px; font-style: italic; }
+
+  .format-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .format-card { border: 1.5px solid var(--gray-2); border-radius: var(--radius-sm); padding: 9px 11px; cursor: pointer; transition: all 0.18s; background: var(--gray-1); }
+  .format-card.selected { border-color: var(--blue); background: var(--blue-light); }
+  .format-card:hover:not(.selected) { border-color: var(--blue); background: var(--blue-light); }
+  .fc-top { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+  .fc-check { width: 15px; height: 15px; border: 1.5px solid var(--gray-3); border-radius: 3px; background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 9px; transition: all 0.18s; flex-shrink: 0; }
+  .format-card.selected .fc-check { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .fc-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .fc-desc { font-size: 11px; color: var(--gray-3); padding-left: 21px; line-height: 1.4; }
+
+  .stepper { display: flex; align-items: center; background: var(--gray-1); border: 1.5px solid var(--gray-2); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; }
+  .stepper button { width: 34px; height: 36px; border: none; background: transparent; font-size: 17px; color: var(--blue); cursor: pointer; font-weight: 600; transition: background 0.15s; display: flex; align-items: center; justify-content: center; }
+  .stepper button:hover { background: var(--blue-light); }
+  .qty { min-width: 34px; text-align: center; font-size: 14px; font-weight: 600; color: var(--text); border-left: 1px solid var(--gray-2); border-right: 1px solid var(--gray-2); padding: 0 4px; line-height: 36px; }
+
+  .submit-btn { width: 100%; padding: 13px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .submit-btn:hover { background: var(--blue); box-shadow: 0 4px 16px rgba(45,91,227,0.30); transform: translateY(-1px); }
+  .submit-btn:active { transform: none; }
+
+  .val-msg { font-size: 11.5px; color: var(--red); margin-top: 4px; display: none; }
+  .field.error select, .field.error textarea, .field.error input { border-color: var(--red); }
+  .field.error .val-msg { display: block; }
+
+  /* OUTPUT PANEL */
+  .output-panel { padding: 28px 32px; overflow-y: auto; display: flex; flex-direction: column; }
+  .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-shrink: 0; }
+  .output-header h2 { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--navy); display: flex; align-items: center; gap: 7px; }
+
+  .copy-btn { display: flex; align-items: center; gap: 7px; padding: 9px 20px; background: var(--gold); color: var(--navy); border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+  .copy-btn:hover { background: #d4911e; }
+  .copy-btn.copied { background: var(--green); color: var(--white); }
+
+  .prompt-box {
+    background: var(--white); border: 1.5px solid var(--gray-2); border-radius: var(--radius);
+    padding: 28px 32px; flex: 1; box-shadow: var(--shadow);
+    font-size: 13.5px; line-height: 1.8; color: var(--text);
+    white-space: pre-wrap; font-family: 'DM Sans', sans-serif;
+    min-height: 300px;
+  }
+
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gray-3); text-align: center; padding: 40px; }
+  .empty-state .es-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.45; }
+  .empty-state h3 { font-family: 'DM Serif Display', serif; font-size: 19px; color: var(--gray-4); margin-bottom: 7px; }
+  .empty-state p { font-size: 13.5px; max-width: 320px; line-height: 1.6; }
+  .empty-state .step-list { margin-top: 16px; text-align: left; font-size: 12.5px; color: var(--gray-4); line-height: 2; }
+  .empty-state .step-list span { display: block; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .form-panel { border-right: none; border-bottom: 1px solid var(--gray-2); }
+    .form-panel, .output-panel { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">✏️</div>
+  <div class="header-text">
+    <h1>Worksheet Prompt Generator</h1>
+    <p>Writing Tutoring Center — fill in the fields, copy the prompt, paste into Claude or ChatGPT</p>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- FORM PANEL -->
+  <div class="form-panel">
+    <div class="panel-title">📋 Build Your Prompt</div>
+
+    <!-- FOCUS MODE -->
+    <div class="field">
+      <div class="field-label">Focus Mode <span class="badge">required</span></div>
+      <div class="field-hint">Single skill = targeted practice. Mixed = review session.</div>
+      <div class="toggle-row">
+        <button class="toggle-btn active" id="toggle-single" onclick="setMode('single')">Single Skill</button>
+        <button class="toggle-btn" id="toggle-mixed" onclick="setMode('mixed')">Mixed Skills</button>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="field" id="field-skills">
+      <div class="field-label">Skill(s) to Practice <span class="badge">required</span></div>
+      <div class="field-hint" id="skill-hint">Select one skill for this worksheet.</div>
+      <div class="chips-wrap" id="chips">
+        <div class="chip" data-skill="Thesis identification & revision" onclick="toggleChip(this)">Thesis revision</div>
+        <div class="chip" data-skill="Comma splices & punctuation" onclick="toggleChip(this)">Comma splices</div>
+        <div class="chip" data-skill="Topic sentences" onclick="toggleChip(this)">Topic sentences</div>
+        <div class="chip" data-skill="Source integration & citation" onclick="toggleChip(this)">Source integration</div>
+        <div class="chip" data-skill="Argument & counterargument" onclick="toggleChip(this)">Argument & counterargument</div>
+        <div class="chip" data-skill="Sentence-level editing" onclick="toggleChip(this)">Sentence-level editing</div>
+      </div>
+      <div class="chip-note" id="chip-note">Select one.</div>
+      <div class="val-msg" id="val-skills">Please select at least one skill.</div>
+    </div>
+
+    <!-- STUDENT SKILL LEVEL -->
+    <div class="field" id="field-level">
+      <div class="field-label">Student Skill Level <span class="badge">required</span></div>
+      <div class="field-hint">Pick the closest match, then add any specifics below.</div>
+      <select id="select-level" onchange="clearLevelError()">
+        <option value="">— Select a skill level —</option>
+        <option value="Beginner — new to academic writing; needs foundational guidance on structure and conventions">Beginner — new to academic writing</option>
+        <option value="Developing — understands basics but makes consistent, patterned errors; benefits from targeted rule practice">Developing — consistent, patterned errors</option>
+        <option value="Intermediate — solid structure and argument; struggles with nuance and advanced sentence-level choices">Intermediate — solid structure, struggles with nuance</option>
+        <option value="Advanced — strong writer who needs refinement and style-level challenge beyond correctness">Advanced — strong writer, needs refinement</option>
+        <option value="Multilingual learner — grammar and sentence-level focus; avoid idiom-heavy explanations">Multilingual learner — grammar & sentence-level focus</option>
+        <option value="Anxious or avoidant — needs confidence-building scaffolding; frame questions as low-stakes exploration">Anxious / avoidant — needs confidence-building</option>
+      </select>
+      <div class="val-msg" id="val-level">Please select a skill level.</div>
+      <div style="margin-top: 7px;">
+        <input type="text" id="custom-level" placeholder="Optional: add context, e.g. 'working on a history essay'" oninput="clearLevelError()" />
+      </div>
+    </div>
+
+    <!-- FORMAT -->
+    <div class="field" id="field-format">
+      <div class="field-label">Question Format <span class="badge">required</span></div>
+      <div class="field-hint">Select one or more.</div>
+      <div class="format-grid">
+        <div class="format-card selected" data-fmt="multiple choice" onclick="toggleFormat(this)">
+          <div class="fc-top"><div class="fc-check">✓</div><div class="fc-name">Multiple Choice</div></div>
+          <div class="fc-desc">4 options, one correct</div>
+        </div>
+        <div class="format-card" data-fmt="sentence correction" onclick="toggleFormat(this)">
+          <div class="fc-top"><div class="fc-check"></div><div class="fc-name">Sentence Correction</div></div>
+          <div class="fc-desc">Rewrite correctly</div>
+        </div>
+        <div class="format-card" data-fmt="insert commas where needed" onclick="toggleFormat(this)">
+          <div class="fc-top"><div class="fc-check"></div><div class="fc-name">Insert Commas</div></div>
+          <div class="fc-desc">Mark punctuation</div>
+        </div>
+        <div class="format-card" data-fmt="error identification" onclick="toggleFormat(this)">
+          <div class="fc-top"><div class="fc-check"></div><div class="fc-name">Error ID</div></div>
+          <div class="fc-desc">Find and name the error</div>
+        </div>
+      </div>
+      <div class="val-msg" id="val-format">Please select at least one format.</div>
+    </div>
+
+    <!-- QTY -->
+    <div class="field">
+      <div class="field-label">Number of Questions</div>
+      <div class="field-hint">Recommended: 8–12 for a 50-min session.</div>
+      <div class="stepper">
+        <button onclick="changeQty(-1)">−</button>
+        <div class="qty" id="qty-display">10</div>
+        <button onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <!-- DRAFT -->
+    <div class="field">
+      <div class="field-label">Student's Draft Text <span class="badge">optional</span></div>
+      <div class="field-hint">Paste what the student wrote. Leave blank for generic practice.</div>
+      <textarea id="draft-text" placeholder="e.g. Many people in our city do not have access to affordable housing."></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="buildPrompt()">
+      ⚡ Build Prompt
+    </button>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="output-panel">
+    <div class="output-header">
+      <h2>📄 Your Prompt</h2>
+      <button class="copy-btn" id="copy-btn" onclick="copyPrompt()" style="display:none;">
+        📋 Copy Prompt
+      </button>
+    </div>
+
+    <div id="empty-state" class="empty-state">
+      <div class="es-icon">✏️</div>
+      <h3>Your prompt will appear here</h3>
+      <p>Fill in the fields on the left, then click Build Prompt.</p>
+      <div class="step-list">
+        <span>1. Fill in the fields</span>
+        <span>2. Click Build Prompt</span>
+        <span>3. Click Copy Prompt</span>
+        <span>4. Paste into Claude or ChatGPT</span>
+      </div>
+    </div>
+
+    <div id="prompt-output" class="prompt-box" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+  let mode = 'single';
+  let qty = 10;
+
+  // ── LEVEL DESCRIPTIONS (full text sent to Claude) ───────
+  const levelMap = {
+    'Beginner — new to academic writing; needs foundational guidance on structure and conventions':
+      'Beginner — new to academic writing; needs foundational guidance on structure and conventions',
+    'Developing — understands basics but makes consistent, patterned errors; benefits from targeted rule practice':
+      'Developing — understands basics but makes consistent, patterned errors; benefits from targeted rule practice',
+    'Intermediate — solid structure and argument; struggles with nuance and advanced sentence-level choices':
+      'Intermediate — solid structure and argument; struggles with nuance and advanced sentence-level choices',
+    'Advanced — strong writer who needs refinement and style-level challenge beyond correctness':
+      'Advanced — strong writer who needs refinement and style-level challenge beyond correctness',
+    'Multilingual learner — grammar and sentence-level focus; avoid idiom-heavy explanations':
+      'Multilingual learner — grammar and sentence-level focus; avoid idiom-heavy explanations',
+    'Anxious or avoidant — needs confidence-building scaffolding; frame questions as low-stakes exploration':
+      'Anxious or avoidant — needs confidence-building scaffolding; frame questions as low-stakes exploration'
+  };
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('toggle-single').classList.toggle('active', m === 'single');
+    document.getElementById('toggle-mixed').classList.toggle('active', m === 'mixed');
+    document.getElementById('skill-hint').textContent = m === 'single'
+      ? 'Select one skill for this worksheet.'
+      : 'Select all skills you want to cover in this mixed review.';
+    document.getElementById('chip-note').textContent = m === 'single' ? 'Select one.' : 'Select all that apply.';
+    if (m === 'single') {
+      const selected = document.querySelectorAll('.chip.selected');
+      if (selected.length > 1) selected.forEach((c, i) => { if (i > 0) c.classList.remove('selected'); });
+    }
+  }
+
+  function toggleChip(el) {
+    if (mode === 'single') {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    } else {
+      el.classList.toggle('selected');
+    }
+    document.getElementById('field-skills').classList.remove('error');
+  }
+
+  function toggleFormat(el) {
+    el.classList.toggle('selected');
+    el.querySelector('.fc-check').textContent = el.classList.contains('selected') ? '✓' : '';
+    document.getElementById('field-format').classList.remove('error');
+  }
+
+  function changeQty(d) {
+    qty = Math.max(4, Math.min(20, qty + d));
+    document.getElementById('qty-display').textContent = qty;
+  }
+
+  function clearLevelError() {
+    document.getElementById('field-level').classList.remove('error');
+  }
+
+  function getSkills() {
+    return Array.from(document.querySelectorAll('.chip.selected')).map(c => c.dataset.skill);
+  }
+  function getFormats() {
+    return Array.from(document.querySelectorAll('.format-card.selected')).map(c => c.dataset.fmt);
+  }
+  function getLevel() {
+    const sel = document.getElementById('select-level').value;
+    const extra = document.getElementById('custom-level').value.trim();
+    if (!sel) return extra;
+    return extra ? `${sel}; ${extra}` : sel;
+  }
+
+  function validate() {
+    let ok = true;
+    if (getSkills().length === 0) { document.getElementById('field-skills').classList.add('error'); ok = false; }
+    if (!getLevel()) { document.getElementById('field-level').classList.add('error'); ok = false; }
+    if (getFormats().length === 0) { document.getElementById('field-format').classList.add('error'); ok = false; }
+    return ok;
+  }
+
+  function buildPrompt() {
+    if (!validate()) return;
+
+    const skills = getSkills();
+    const level = getLevel();
+    const formats = getFormats();
+    const draft = document.getElementById('draft-text').value.trim();
+
+    const skillLine = mode === 'mixed'
+      ? `Mixed review covering: ${skills.join(', ')}`
+      : `Focused skill: ${skills[0]}`;
+
+    const formatLine = formats.length === 1
+      ? formats[0]
+      : formats.slice(0, -1).join(', ') + ', and ' + formats[formats.length - 1];
+
+    const draftSection = draft
+      ? `\nSTUDENT'S DRAFT TEXT:\n"${draft}"\nBuild at least 3 questions directly around this text.\n`
+      : `\nNo student draft provided — use realistic example sentences for this student level.\n`;
+
+    const prompt =
+`You are a writing tutor assistant. Generate a student-facing practice worksheet based on the details below. Do not complete the student's assignment. Do not write full essays or paragraphs on behalf of the student.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WORKSHEET DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SKILL(S): ${skillLine}
+
+STUDENT SKILL LEVEL: ${level}
+
+NUMBER OF QUESTIONS: ${qty} questions
+
+FORMAT: ${formatLine}
+${draftSection}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• Questions must require the student to think and choose or rewrite — not just copy or fill in a blank.
+• Multiple choice: one clearly correct answer and three plausible wrong answers. Each wrong answer must fail for a specific reason, not just because it sounds off.
+• Sentence correction: bold the corrected word or punctuation in the answer key only — not in the question itself.
+• Progress from straightforward questions to trickier edge cases.
+• Use realistic sentence content from college-level contexts (civic issues, workplace communication, academic writing, everyday life).
+• Do not invent sources, statistics, or citations. If an example requires a citation, use a labeled placeholder: [Source: peer-reviewed article on topic X].
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Produce four clearly labeled sections:
+
+1. WORKSHEET — student-facing questions only. No answers visible.
+
+2. ANSWER KEY — correct answer for each question with a one-sentence explanation naming the specific rule applied.
+
+3. TUTOR TALK MOVES — 3–5 short questions the tutor asks out loud during the session to prompt student thinking (e.g., "What would someone who disagrees say here?"). Each talk move must be tied to a specific question number.
+
+4. SELF-CHECK — confirm: (a) no invented sources or facts, (b) no full essay written on the student's behalf, (c) all questions match the skill(s) listed above. Flag anything uncertain.`;
+
+    document.getElementById('empty-state').style.display = 'none';
+    const box = document.getElementById('prompt-output');
+    box.style.display = 'block';
+    box.textContent = prompt;
+
+    const btn = document.getElementById('copy-btn');
+    btn.style.display = 'flex';
+    btn.textContent = '📋 Copy Prompt';
+    btn.classList.remove('copied');
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('prompt-output').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Prompt';
+        btn.classList.remove('copied');
+      }, 2200);
+    });
+  }
+</script>
+</body>
+</html>
