@@ -98,7 +98,7 @@
   .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-shrink: 0; }
   .output-header h2 { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--navy); display: flex; align-items: center; gap: 7px; }
 
-  .copy-btn { display: flex; align-items: center; gap: 7px; padding: 9px 20px; background: var(--gold); color: var(--navy); border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+  .copy-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--gold); color: var(--navy); border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.18s; vertical-align: middle; position: relative; top: -2px; }
   .copy-btn:hover { background: #d4911e; }
   .copy-btn.copied { background: var(--green); color: var(--white); }
 
@@ -107,7 +107,8 @@
     padding: 28px 32px; flex: 1; box-shadow: var(--shadow);
     font-size: 13.5px; line-height: 1.8; color: var(--text);
     white-space: pre-wrap; font-family: 'DM Sans', sans-serif;
-    min-height: 300px;
+    min-height: 300px; resize: none; width: 100%; outline: none;
+    cursor: text;
   }
 
   .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gray-3); text-align: center; padding: 40px; }
@@ -237,10 +238,7 @@
   <!-- OUTPUT PANEL -->
   <div class="output-panel">
     <div class="output-header">
-      <h2>📄 Your Prompt</h2>
-      <button class="copy-btn" id="copy-btn" onclick="copyPrompt()" style="display:none;">
-        📋 Copy Prompt
-      </button>
+      <h2>📄 Your Prompt &nbsp;<button class="copy-btn" id="copy-btn" onclick="copyPrompt()" style="display:none;">📋 Copy Prompt</button></h2>
     </div>
 
     <div id="empty-state" class="empty-state">
@@ -250,12 +248,12 @@
       <div class="step-list">
         <span>1. Fill in the fields</span>
         <span>2. Click Build Prompt</span>
-        <span>3. Click Copy Prompt</span>
+        <span>3. Click Copy Prompt — or click inside the box and press Ctrl+A, Ctrl+C</span>
         <span>4. Paste into Claude or ChatGPT</span>
       </div>
     </div>
 
-    <div id="prompt-output" class="prompt-box" style="display:none;"></div>
+    <textarea id="prompt-output" class="prompt-box" style="display:none;" readonly onclick="this.select()"></textarea>
   </div>
 </div>
 
@@ -402,7 +400,7 @@ Produce four clearly labeled sections:
     document.getElementById('empty-state').style.display = 'none';
     const box = document.getElementById('prompt-output');
     box.style.display = 'block';
-    box.textContent = prompt;
+    box.value = prompt;
 
     const btn = document.getElementById('copy-btn');
     btn.style.display = 'flex';
@@ -411,16 +409,30 @@ Produce four clearly labeled sections:
   }
 
   function copyPrompt() {
-    const text = document.getElementById('prompt-output').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById('copy-btn');
+    const box = document.getElementById('prompt-output');
+    box.select();
+    box.setSelectionRange(0, 99999); // mobile support
+
+    // Try modern clipboard API first, fall back to execCommand for iframes
+    const btn = document.getElementById('copy-btn');
+    try {
+      navigator.clipboard.writeText(box.value).then(() => {
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '📋 Copy Prompt'; btn.classList.remove('copied'); }, 2200);
+      }).catch(() => {
+        // Clipboard API blocked — fall back to execCommand
+        document.execCommand('copy');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '📋 Copy Prompt'; btn.classList.remove('copied'); }, 2200);
+      });
+    } catch (e) {
+      document.execCommand('copy');
       btn.textContent = '✓ Copied!';
       btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = '📋 Copy Prompt';
-        btn.classList.remove('copied');
-      }, 2200);
-    });
+      setTimeout(() => { btn.textContent = '📋 Copy Prompt'; btn.classList.remove('copied'); }, 2200);
+    }
   }
 </script>
 </body>
