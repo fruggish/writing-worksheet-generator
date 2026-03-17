@@ -190,25 +190,8 @@
     <!-- FORMAT -->
     <div class="field" id="field-format">
       <div class="field-label">Question Format <span class="badge">required</span></div>
-      <div class="field-hint">Select one or more.</div>
-      <div class="format-grid">
-        <div class="format-card selected" data-fmt="multiple choice" onclick="toggleFormat(this)">
-          <div class="fc-top"><div class="fc-check">✓</div><div class="fc-name">Multiple Choice</div></div>
-          <div class="fc-desc">4 options, one correct</div>
-        </div>
-        <div class="format-card" data-fmt="sentence correction" onclick="toggleFormat(this)">
-          <div class="fc-top"><div class="fc-check"></div><div class="fc-name">Sentence Correction</div></div>
-          <div class="fc-desc">Rewrite correctly</div>
-        </div>
-        <div class="format-card" data-fmt="insert commas where needed" onclick="toggleFormat(this)">
-          <div class="fc-top"><div class="fc-check"></div><div class="fc-name">Insert Commas</div></div>
-          <div class="fc-desc">Mark punctuation</div>
-        </div>
-        <div class="format-card" data-fmt="error identification" onclick="toggleFormat(this)">
-          <div class="fc-top"><div class="fc-check"></div><div class="fc-name">Error ID</div></div>
-          <div class="fc-desc">Find and name the error</div>
-        </div>
-      </div>
+      <div class="field-hint" id="format-hint">Select a skill above to see available formats.</div>
+      <div class="format-grid" id="format-grid"></div>
       <div class="val-msg" id="val-format">Please select at least one format.</div>
     </div>
 
@@ -230,6 +213,24 @@
       <textarea id="draft-text" placeholder="e.g. Many people in our city do not have access to affordable housing."></textarea>
     </div>
 
+    <!-- STRUGGLING -->
+    <div class="field">
+      <div class="field-label">What the Student is Struggling With <span class="badge">optional</span></div>
+      <div class="field-hint">Be specific — this shapes the questions more than any other field.</div>
+      <textarea id="struggling-text" placeholder="e.g. Always writes 'however' as a coordinating conjunction. Thesis previews topics instead of making a claim." style="min-height:64px;"></textarea>
+    </div>
+
+    <!-- DIFFICULTY -->
+    <div class="field">
+      <div class="field-label">Difficulty Level</div>
+      <div class="field-hint">How challenging should the questions be?</div>
+      <div class="toggle-row">
+        <button class="toggle-btn" id="diff-straightforward" onclick="setDifficulty('straightforward')">Straightforward</button>
+        <button class="toggle-btn active" id="diff-mixed" onclick="setDifficulty('mixed')">Mixed</button>
+        <button class="toggle-btn" id="diff-edge" onclick="setDifficulty('edge cases')">Edge Cases</button>
+      </div>
+    </div>
+
     <button class="submit-btn" onclick="buildPrompt()">
       ⚡ Build Prompt
     </button>
@@ -248,7 +249,7 @@
       <div class="step-list">
         <span>1. Fill in the fields</span>
         <span>2. Click Build Prompt</span>
-        <span>3. Click Copy Prompt — or click inside the box and press Ctrl+A, Ctrl+C</span>
+        <span>3. Click inside the prompt box and press Ctrl+A then Ctrl+C to copy</span>
         <span>4. Paste into Claude or ChatGPT</span>
       </div>
     </div>
@@ -263,6 +264,16 @@
 <script>
   let mode = 'single';
   let qty = 10;
+  let difficulty = 'mixed';
+
+  function setDifficulty(d) {
+    difficulty = d;
+    ['straightforward', 'mixed', 'edge cases'].forEach(v => {
+      const id = 'diff-' + v.replace(' ', '-').replace(' ', '-');
+      const el = document.getElementById('diff-' + (v === 'edge cases' ? 'edge' : v));
+      if (el) el.classList.toggle('active', v === d);
+    });
+  }
 
   // ── LEVEL DESCRIPTIONS (full text sent to Claude) ───────
   const levelMap = {
@@ -294,6 +305,81 @@
     }
   }
 
+  // ── FORMAT MAP ───────────────────────────────────────────
+  const formatMap = {
+    'Thesis identification & revision': [
+      { fmt: 'multiple choice', name: 'Multiple Choice', desc: 'Which is the strongest thesis?' },
+      { fmt: 'sentence rewrite', name: 'Sentence Rewrite', desc: 'Revise to make it arguable' },
+      { fmt: 'rank and evaluate', name: 'Rank & Evaluate', desc: 'Order from weakest to strongest' }
+    ],
+    'Comma splices & punctuation': [
+      { fmt: 'multiple choice', name: 'Multiple Choice', desc: '4 options, one correct' },
+      { fmt: 'sentence correction', name: 'Sentence Correction', desc: 'Rewrite correctly' },
+      { fmt: 'insert commas where needed', name: 'Insert Commas', desc: 'Mark punctuation' },
+      { fmt: 'error identification', name: 'Error ID', desc: 'Find and name the error' }
+    ],
+    'Topic sentences': [
+      { fmt: 'multiple choice', name: 'Multiple Choice', desc: 'Which best introduces this paragraph?' },
+      { fmt: 'sentence rewrite', name: 'Sentence Rewrite', desc: 'Revise to preview the argument' },
+      { fmt: 'identify the problem', name: 'Identify the Problem', desc: 'Name what is weak and why' }
+    ],
+    'Source integration & citation': [
+      { fmt: 'multiple choice', name: 'Multiple Choice', desc: 'Which version integrates correctly?' },
+      { fmt: 'sentence rewrite', name: 'Sentence Rewrite', desc: 'Revise to integrate the source' },
+      { fmt: 'error identification', name: 'Error ID', desc: 'Find the citation error' }
+    ],
+    'Argument & counterargument': [
+      { fmt: 'multiple choice', name: 'Multiple Choice', desc: 'Which best addresses the counterargument?' },
+      { fmt: 'evaluate a passage', name: 'Evaluate a Passage', desc: 'Does this acknowledge the counterargument?' },
+      { fmt: 'write a counterargument', name: 'Write a Counterargument', desc: 'One-sentence response to the claim' }
+    ],
+    'Sentence-level editing': [
+      { fmt: 'multiple choice', name: 'Multiple Choice', desc: '4 options, one correct' },
+      { fmt: 'sentence correction', name: 'Sentence Correction', desc: 'Rewrite correctly' },
+      { fmt: 'error identification', name: 'Error ID', desc: 'Find and name the error' },
+      { fmt: 'insert commas where needed', name: 'Insert Commas', desc: 'Mark punctuation' }
+    ]
+  };
+
+  function renderFormats(skills) {
+    const grid = document.getElementById('format-grid');
+    const hint = document.getElementById('format-hint');
+    grid.innerHTML = '';
+
+    if (skills.length === 0) {
+      hint.textContent = 'Select a skill above to see available formats.';
+      return;
+    }
+
+    // Union of all formats across selected skills, preserving order
+    const seen = new Set();
+    const formats = [];
+    for (const skill of skills) {
+      for (const f of (formatMap[skill] || [])) {
+        if (!seen.has(f.fmt)) { seen.add(f.fmt); formats.push(f); }
+      }
+    }
+
+    hint.textContent = 'Select one or more.';
+
+    formats.forEach((f, i) => {
+      const card = document.createElement('div');
+      const isFirst = i === 0;
+      card.className = 'format-card' + (isFirst ? ' selected' : '');
+      card.dataset.fmt = f.fmt;
+      card.onclick = () => toggleFormat(card);
+      card.innerHTML = `
+        <div class="fc-top">
+          <div class="fc-check">${isFirst ? '✓' : ''}</div>
+          <div class="fc-name">${f.name}</div>
+        </div>
+        <div class="fc-desc">${f.desc}</div>`;
+      grid.appendChild(card);
+    });
+
+    document.getElementById('field-format').classList.remove('error');
+  }
+
   function toggleChip(el) {
     if (mode === 'single') {
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
@@ -302,6 +388,7 @@
       el.classList.toggle('selected');
     }
     document.getElementById('field-skills').classList.remove('error');
+    renderFormats(getSkills());
   }
 
   function toggleFormat(el) {
@@ -347,6 +434,7 @@
     const level = getLevel();
     const formats = getFormats();
     const draft = document.getElementById('draft-text').value.trim();
+    const struggling = document.getElementById('struggling-text').value.trim();
 
     const skillLine = mode === 'mixed'
       ? `Mixed review covering: ${skills.join(', ')}`
@@ -359,6 +447,16 @@
     const draftSection = draft
       ? `\nSTUDENT'S DRAFT TEXT:\n"${draft}"\nBuild at least 3 questions directly around this text.\n`
       : `\nNo student draft provided — use realistic example sentences for this student level.\n`;
+
+    const strugglingSection = struggling
+      ? `\nSPECIFIC STRUGGLES:\n${struggling}\nPrioritize questions that directly address these patterns.\n`
+      : '';
+
+    const difficultyLine = {
+      'straightforward': 'All questions should be straightforward and confidence-building. Avoid edge cases.',
+      'mixed': 'Progress from straightforward questions to trickier edge cases.',
+      'edge cases': 'Emphasize tricky edge cases and questions where the wrong answer is highly tempting. Minimal easy warm-up questions.'
+    }[difficulty];
 
     const prompt =
 `Before generating anything, ask me 2–3 clarifying questions about the student, assignment context, or session goal that would help you produce a more targeted worksheet. Wait for my answers before generating.
@@ -373,10 +471,12 @@ SKILL(S): ${skillLine}
 
 STUDENT SKILL LEVEL: ${level}
 
+SESSION LENGTH: 60 minutes
+
 NUMBER OF QUESTIONS: ${qty} questions
 
 FORMAT: ${formatLine}
-${draftSection}
+${draftSection}${strugglingSection}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 REQUIREMENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -384,7 +484,7 @@ REQUIREMENTS
 • Questions must require the student to think and choose or rewrite — not just copy or fill in a blank.
 • Multiple choice: one clearly correct answer and three plausible wrong answers. Each wrong answer must fail for a specific reason, not just because it sounds off.
 • Sentence correction: bold the corrected word or punctuation in the answer key only — not in the question itself.
-• Progress from straightforward questions to trickier edge cases.
+• ${difficultyLine}
 • Use realistic sentence content from college-level contexts (civic issues, workplace communication, academic writing, everyday life).
 • Do not invent sources, statistics, or citations. If an example requires a citation, use a labeled placeholder: [Source: peer-reviewed article on topic X].
 
